@@ -15,7 +15,6 @@ import java.util.Set;
  * Implementación de un Grafo Social No Dirigido.
  * Utiliza una lista de adyacencia (Map) para almacenar las conexiones (aristas)
  * entre los nodos (Usuarios).
- * Cumple con el requisito RF-023.
  */
 public class GrafoSocial {
 
@@ -25,9 +24,7 @@ public class GrafoSocial {
      */
     private final Map<Usuario, List<Usuario>> listaDeAdyacencia;
 
-    /**
-     * Constructor que inicializa el grafo.
-     */
+    //Constructor que inicializa el grafo.
     public GrafoSocial() {
         this.listaDeAdyacencia = new HashMap<>();
     }
@@ -63,9 +60,7 @@ public class GrafoSocial {
      * Implementa el algoritmo BFS (Búsqueda en Anchura) para encontrar
      * "amigos de amigos" (nodos a 2 niveles de distancia).
      * Cumple con el requisito RF-024.
-     *
-     * @param usuarioInicio El usuario desde el que se inicia la búsqueda (el
-     *                      usuario actual).
+     * @param usuarioInicio El usuario desde el que se inicia la búsqueda (el usuario actual).
      * @return Un Set de Usuarios que son "amigos de amigos" (nivel 2).
      */
     public Set<Usuario> bfsAmigosDeAmigos(Usuario usuarioInicio) {

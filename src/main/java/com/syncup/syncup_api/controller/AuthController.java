@@ -12,7 +12,6 @@ import com.syncup.syncup_api.domain.Usuario;
 import com.syncup.syncup_api.dto.UserRegistrationRequest;
 import com.syncup.syncup_api.service.UsuarioService;
 
-// --- ESTAS SON LAS IMPORTACIONES NUEVAS QUE NECESITAMOS ---
 import com.syncup.syncup_api.dto.LoginRequest;
 import com.syncup.syncup_api.dto.LoginResponse;
 
@@ -23,22 +22,16 @@ public class AuthController {
     @Autowired
     private UsuarioService usuarioService;
 
-    /**
-     * Endpoint para RF-001: Registrar un nuevo usuario.
-     * (Este ya lo teníamos)
-     */
+    // registrar nuevo usuario
     @PostMapping("/register")
     public ResponseEntity<Usuario> registerUser(@RequestBody UserRegistrationRequest request) {
         Usuario usuarioRegistrado = usuarioService.registrarUsuario(request);
         return new ResponseEntity<>(usuarioRegistrado, HttpStatus.CREATED);
     }
 
-    // --- ESTE ES EL NUEVO MÉTODO QUE AÑADIMOS ---
+    // endpoint para Iniciar sesión.
+    // Se accede vía: POST http://localhost:8080/api/auth/login
 
-    /**
-     * Endpoint para RF-001: Iniciar sesión.
-     * Se accede vía: POST http://localhost:8080/api/auth/login
-     */
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> loginUser(@RequestBody LoginRequest request) {
         // Llama al servicio para hacer el trabajo

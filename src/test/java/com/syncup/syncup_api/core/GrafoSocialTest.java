@@ -11,7 +11,6 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Prueba Unitaria para la clase GrafoSocial.
  * Verifica el algoritmo BFS para "amigos de amigos".
- * Cumple con parte del requisito RF-031.
  */
 class GrafoSocialTest {
 
@@ -64,9 +63,7 @@ class GrafoSocialTest {
         grafo.agregarUsuario(aislado);
     }
 
-    /**
-     * Prueba principal: Encontrar amigos de amigos (Nivel 2).
-     */
+    //Prueba principal: Encontrar amigos de amigos (Nivel 2).
     @Test
     void testBfsAmigosDeAmigos() {
         // Buscamos las sugerencias para "daniel"

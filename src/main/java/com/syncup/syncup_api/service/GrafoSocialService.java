@@ -58,8 +58,6 @@ public class GrafoSocialService {
     /**
      * Obtiene sugerencias de "amigos de amigos" para un usuario específico.
      * Llama directamente al algoritmo BFS implementado en el grafo.
-     * Cumple con RF-008.
-     *
      * @param usuario El usuario para el cual se buscan sugerencias.
      * @return Un Set de Usuarios sugeridos (amigos de nivel 2).
      */
@@ -70,8 +68,6 @@ public class GrafoSocialService {
     /**
      * Añade una nueva conexión al grafo en tiempo real.
      * Se llama cuando un usuario decide seguir a otro.
-     * Cumple con RF-007.
-     *
      * @param seguidor El usuario que realiza la acción de seguir.
      * @param seguido El usuario que está siendo seguido.
      */

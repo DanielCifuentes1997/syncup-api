@@ -2,7 +2,7 @@ package com.syncup.syncup_api.controller;
 
 import com.syncup.syncup_api.domain.Cancion;
 import com.syncup.syncup_api.dto.SongCreateDto;
-import com.syncup.syncup_api.dto.SongDto; // Usaremos el DTO para la respuesta
+import com.syncup.syncup_api.dto.SongDto;
 import com.syncup.syncup_api.service.CancionService;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,8 +26,6 @@ public class AdminController {
 
     /**
      * Endpoint para (Admin) añadir una nueva canción al catálogo.
-     * Cumple con el requisito funcional RF-010.
-     *
      * @param songDto El DTO con los datos de la canción a crear.
      * @return Un ResponseEntity con el DTO de la canción creada y un estado 201 (Created).
      */

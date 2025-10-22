@@ -52,10 +52,7 @@ public class CancionService {
         return cancionGuardada;
     }
 
-    /**
-     * Realiza búsqueda avanzada, manejando AND y OR (concurrente).
-     * Cumple RF-004 y RF-030.
-     */
+    //Realiza búsqueda avanzada, manejando AND y OR (concurrente).
     public List<Cancion> buscarCancionesAvanzado(String query) {
         List<Cancion> todasLasCanciones = cancionRepository.findAll();
 
@@ -95,7 +92,7 @@ public class CancionService {
             return new ArrayList<>(combinedResults); // Convertir Set a List para devolver
 
         } else {
-            // --- Lógica SECUENCIAL para AND (o consulta simple) ---
+            // Lógica SECUENCIAL para AND (o consulta simple)
             System.out.println("--- [CancionService] Ejecutando búsqueda simple (AND/única).");
             Map<String, String> criteria = parseQuery(query);
             return todasLasCanciones.stream()
@@ -105,7 +102,6 @@ public class CancionService {
     }
 
     private Map<String, String> parseQuery(String query) {
-        // ... (código existente sin cambios)
         Map<String, String> criteria = new HashMap<>();
         if (query == null || query.trim().isEmpty()) {
             return criteria;
@@ -125,7 +121,6 @@ public class CancionService {
     }
 
     private boolean matchesCriteria(Cancion cancion, Map<String, String> criteria) {
-        // ... (código existente sin cambios)
         for (Map.Entry<String, String> entry : criteria.entrySet()) {
             String key = entry.getKey();
             String expectedValue = entry.getValue();

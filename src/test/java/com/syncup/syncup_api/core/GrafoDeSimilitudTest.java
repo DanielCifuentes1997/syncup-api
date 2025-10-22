@@ -28,14 +28,6 @@ class GrafoDeSimilitudTest {
      * Este método se ejecuta antes de cada prueba.
      * Construye nuestro grafo de canciones.
      *
-     * Estructura del Grafo (Pesos = Disimilitud):
-     *
-     * (B) --5-- (D)
-     * / |         |
-     * 1  3         1
-     * /   |         |
-     * (A) --2-- (C) --4-- (E)
-     *
      */
     @BeforeEach
     void setUp() {
@@ -59,9 +51,7 @@ class GrafoDeSimilitudTest {
         grafo.agregarConexionPonderada(cancionC, cancionE, 4.0); // C-E = 4
     }
 
-    /**
-     * Prueba el algoritmo de Dijkstra desde el nodo A.
-     */
+    //Prueba el algoritmo de Dijkstra desde el nodo A.
     @Test
     void testDijkstraDesdeA() {
         // Ejecutamos Dijkstra comenzando desde la Canción A

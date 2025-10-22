@@ -52,9 +52,7 @@ public class UsuarioService {
         return usuarioGuardado;
     }
 
-    /**
-     * Autentica a un usuario y genera un token de sesión.
-     */
+    //Autentica a un usuario y genera un token de sesión.
     public LoginResponse loginUsuario(LoginRequest request) {
 
         Optional<Usuario> usuarioOptional = usuarioRepository.findByUsername(request.getUsername());
@@ -68,11 +66,8 @@ public class UsuarioService {
         return new LoginResponse(token);
     }
 
-    // --- NUEVOS MÉTODOS DE UTILIDAD ---
-
     /**
      * Obtiene el nombre de usuario (username) asociado a un token de sesión.
-     *
      * @param token El token de sesión.
      * @return El username si el token es válido, o null si no lo es.
      */
@@ -84,7 +79,6 @@ public class UsuarioService {
 
     /**
      * Obtiene la entidad Usuario completa a partir de un token de sesión.
-     *
      * @param token El token de sesión.
      * @return El objeto Usuario completo.
      * @throws RuntimeException si el token no es válido o el usuario no se encuentra.

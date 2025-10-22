@@ -1,10 +1,10 @@
 package com.syncup.syncup_api.service;
 
-import com.syncup.syncup_api.core.Trie; // Importa nuestro Trie
+import com.syncup.syncup_api.core.Trie;
 import com.syncup.syncup_api.domain.Cancion;
 import com.syncup.syncup_api.repository.CancionRepository;
 
-import jakarta.annotation.PostConstruct; // Importante para el arranque
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -43,7 +43,6 @@ public class TrieService {
     /**
      * Método público que el Controlador usará para obtener sugerencias.
      * Simplemente delega la llamada a nuestro objeto Trie. [cite: 120]
-     * Cumple con RF-003.
      */
     public List<String> autocomplete(String prefix) {
         return trie.autocomplete(prefix);

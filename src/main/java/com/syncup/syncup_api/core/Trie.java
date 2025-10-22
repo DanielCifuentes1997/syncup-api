@@ -48,8 +48,6 @@ public class Trie {
 
     /**
      * Busca todas las palabras en el Trie que comienzan con un prefijo dado.
-     * [cite_start]Cumple con RF-026[cite: 226].
-     *
      * @param prefix El prefijo (ej. "lov") para autocompletar.
      * @return Una lista de strings (ej. ["love", "lovely"]) que comienzan con el prefijo.
      */

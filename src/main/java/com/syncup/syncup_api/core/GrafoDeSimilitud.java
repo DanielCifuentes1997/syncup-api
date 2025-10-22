@@ -13,7 +13,6 @@ import java.util.HashSet;
 /**
  * Implementación de un Grafo Ponderado No Dirigido.
  * Modela la "similitud" entre canciones. Un peso bajo significa alta similitud.
- * Cumple con el requisito RF-021.
  */
 public class GrafoDeSimilitud {
 
@@ -27,16 +26,12 @@ public class GrafoDeSimilitud {
         this.listaDeAdyacencia = new HashMap<>();
     }
 
-    /**
-     * Añade una nueva canción (nodo) al grafo.
-     */
+    //Añade una nueva canción (nodo) al grafo.
     public void agregarCancion(Cancion cancion) {
         listaDeAdyacencia.computeIfAbsent(cancion, k -> new ArrayList<>());
     }
 
-    /**
-     * Añade una conexión ponderada y no dirigida entre dos canciones.
-     */
+     //Añade una conexión ponderada y no dirigida entre dos canciones.
     public void agregarConexionPonderada(Cancion cancion1, Cancion cancion2, double peso) {
         // Asegurarse de que ambos nodos existan
         agregarCancion(cancion1);
@@ -50,8 +45,6 @@ public class GrafoDeSimilitud {
     /**
      * Implementa el algoritmo de Dijkstra para encontrar los caminos más cortos
      * (rutas de mayor similitud) desde una canción semilla.
-     * Cumple con el requisito RF-022.
-     *
      * @param cancionInicio La canción desde la cual se genera la "radio".
      * @return Un Map donde la clave es la Cancion destino y el valor es el
      *         "costo" total (disimilitud acumulada) para llegar a ella.

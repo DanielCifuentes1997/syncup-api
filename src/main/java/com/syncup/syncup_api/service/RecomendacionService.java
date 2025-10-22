@@ -65,10 +65,7 @@ public class RecomendacionService {
         System.out.println("--- [RecomendacionService] Grafo de Similitud construido. Aristas añadidas: " + aristasAgregadas);
     }
 
-    /**
-     * Genera una "Radio" basada en similitud usando Dijkstra.
-     * Cumple con RF-006.
-     */
+    //Genera una "Radio" basada en similitud usando Dijkstra.
     public List<Cancion> generarRadio(Cancion cancionSemilla, int limite) {
         Map<Cancion, Double> distancias = grafo.dijkstra(cancionSemilla);
 
@@ -87,9 +84,7 @@ public class RecomendacionService {
             .collect(Collectors.toList());
     }
 
-    /**
-     * Calcula la disimilitud (peso) entre dos canciones.
-     */
+    //Calcula la disimilitud (peso) entre dos canciones.
     private double calcularPeso(Cancion c1, Cancion c2) {
         double peso = 0.0;
 
@@ -114,10 +109,7 @@ public class RecomendacionService {
         return Math.max(peso, PESO_MINIMO);
     }
 
-    /**
-     * Genera playlist "Descubrimiento Semanal" (implementación simple).
-     * Cumple con RF-005.
-     */
+    //Genera playlist "Descubrimiento Semanal" (implementación simple).
     public List<Cancion> generarDescubrimientoSemanal(int limite) {
         List<Cancion> todas = cancionRepository.findAll();
         Collections.shuffle(todas);
