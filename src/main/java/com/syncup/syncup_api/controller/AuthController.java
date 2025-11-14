@@ -3,6 +3,8 @@ package com.syncup.syncup_api.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -14,6 +16,8 @@ import com.syncup.syncup_api.service.UsuarioService;
 
 import com.syncup.syncup_api.dto.LoginRequest;
 import com.syncup.syncup_api.dto.LoginResponse;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -30,8 +34,6 @@ public class AuthController {
     }
 
     // endpoint para Iniciar sesión.
-    // Se accede vía: POST http://localhost:8080/api/auth/login
-
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> loginUser(@RequestBody LoginRequest request) {
         // Llama al servicio para hacer el trabajo
@@ -39,5 +41,12 @@ public class AuthController {
 
         // Devuelve el token con un código 200 (OK)
         return ResponseEntity.ok(response);
+    }
+
+    // endpoint para verificar si un username (email) ya existe
+    @GetMapping("/check-username/{username}")
+    public ResponseEntity<Map<String, Boolean>> checkUsernameExists(@PathVariable String username) {
+        boolean exists = usuarioService.usernameExists(username);
+        return ResponseEntity.ok(Map.of("exists", exists));
     }
 }

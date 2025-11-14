@@ -14,10 +14,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-/**
- * Servicio para gestionar la lógica de negocio relacionada con los Usuarios,
- * incluyendo autenticación y gestión de tokens.
- */
+// Servicio para gestionar la lógica de negocio de Usuarios
 @Service
 public class UsuarioService {
 
@@ -30,9 +27,7 @@ public class UsuarioService {
     // Mapa en memoria para almacenar tokens de sesión activos
     private Map<String, String> activeTokens = new HashMap<>();
 
-    /**
-     * Registra un nuevo usuario en el sistema.
-     */
+    // Registra un nuevo usuario en el sistema
     public Usuario registrarUsuario(UserRegistrationRequest request) {
 
         if (usuarioRepository.findByUsername(request.getUsername()).isPresent()) {
@@ -43,16 +38,22 @@ public class UsuarioService {
         nuevoUsuario.setUsername(request.getUsername());
         nuevoUsuario.setNombre(request.getNombre());
         nuevoUsuario.setPassword(request.getPassword());
+        
+        // Guardar los nuevos campos del registro
+        nuevoUsuario.setFechaNacimiento(request.getFechaNacimiento());
+        nuevoUsuario.setGenero(request.getGenero());
+
         nuevoUsuario.setListaFavoritos(new LinkedList<>());
 
         Usuario usuarioGuardado = usuarioRepository.save(nuevoUsuario);
 
+        // Añadir el nuevo usuario al grafo social en memoria
         grafoSocialService.agregarUsuario(usuarioGuardado);
 
         return usuarioGuardado;
     }
 
-    //Autentica a un usuario y genera un token de sesión.
+    // Autentica a un usuario y genera un token de sesión
     public LoginResponse loginUsuario(LoginRequest request) {
 
         Optional<Usuario> usuarioOptional = usuarioRepository.findByUsername(request.getUsername());
@@ -66,23 +67,13 @@ public class UsuarioService {
         return new LoginResponse(token);
     }
 
-    /**
-     * Obtiene el nombre de usuario (username) asociado a un token de sesión.
-     * @param token El token de sesión.
-     * @return El username si el token es válido, o null si no lo es.
-     */
+    // Obtiene el nombre de usuario asociado a un token de sesión
     public String getUsernameFromToken(String token) {
-        // El token real viene con "Bearer " al inicio, lo limpiamos.
         String cleanToken = token.replace("Bearer ", "");
         return activeTokens.get(cleanToken);
     }
 
-    /**
-     * Obtiene la entidad Usuario completa a partir de un token de sesión.
-     * @param token El token de sesión.
-     * @return El objeto Usuario completo.
-     * @throws RuntimeException si el token no es válido o el usuario no se encuentra.
-     */
+    // Obtiene la entidad Usuario completa a partir de un token de sesión
     public Usuario getUserFromToken(String token) {
         String username = getUsernameFromToken(token);
         if (username == null) {
@@ -90,6 +81,11 @@ public class UsuarioService {
         }
 
         return usuarioRepository.findByUsername(username)
-            .orElseThrow(() -> new RuntimeException("Usuario no encontrado para el token: " + username));
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado para el token: " + username));
+    }
+
+    // Verifica si un nombre de usuario (email) ya existe en la BD
+    public boolean usernameExists(String username) {
+        return usuarioRepository.findByUsername(username).isPresent();
     }
 }
