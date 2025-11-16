@@ -11,16 +11,16 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet; // Para quitar duplicados
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set; // Para quitar duplicados
-import java.util.concurrent.Callable; // Para las tareas concurrentes
-import java.util.concurrent.ExecutionException; // Para manejar errores de hilos
+import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future; // Para obtener resultados de hilos
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
-import java.util.stream.Stream; // Para combinar resultados
+import java.util.stream.Stream;
 
 @Service
 public class CancionService {
@@ -35,11 +35,10 @@ public class CancionService {
     private RecomendacionService recomendacionService;
 
     @Autowired
-    private ExecutorService taskExecutor; // Nuestro pool de hilos
+    private ExecutorService taskExecutor;
 
     @Transactional
     public Cancion crearCancion(SongCreateDto songDto) {
-        // ... (código existente sin cambios)
         Cancion nuevaCancion = new Cancion();
         nuevaCancion.setTitulo(songDto.getTitulo());
         nuevaCancion.setArtista(songDto.getArtista());
@@ -56,40 +55,35 @@ public class CancionService {
     public List<Cancion> buscarCancionesAvanzado(String query) {
         List<Cancion> todasLasCanciones = cancionRepository.findAll();
 
-        // Detectar si hay OR (ignorando mayúsculas/minúsculas)
         String[] orParts = query.split("(?i)\\s+OR\\s+");
 
         if (orParts.length > 1) {
-            // --- Lógica CONCURRENTE para OR ---
+            // Lógica CONCURRENTE para OR
             System.out.println("--- [CancionService] Ejecutando búsqueda con OR concurrente.");
 
             List<Future<List<Cancion>>> futures = new ArrayList<>();
 
-            // Crear una tarea separada para cada parte del OR
             for (String orPart : orParts) {
                 Callable<List<Cancion>> task = () -> {
-                    Map<String, String> criteria = parseQuery(orPart); // Parsea solo esta parte
+                    Map<String, String> criteria = parseQuery(orPart);
                     return todasLasCanciones.stream()
                             .filter(cancion -> matchesCriteria(cancion, criteria))
                             .collect(Collectors.toList());
                 };
-                futures.add(taskExecutor.submit(task)); // Enviar tarea al pool de hilos
+                futures.add(taskExecutor.submit(task));
             }
 
-            // Recolectar resultados de todas las tareas
-            Set<Cancion> combinedResults = new HashSet<>(); // Usar Set para eliminar duplicados automáticamente
+            Set<Cancion> combinedResults = new HashSet<>();
             for (Future<List<Cancion>> future : futures) {
                 try {
-                    combinedResults.addAll(future.get()); // .get() espera a que el hilo termine
+                    combinedResults.addAll(future.get());
                 } catch (InterruptedException | ExecutionException e) {
-                    // Manejo básico de errores de concurrencia
                     System.err.println("Error ejecutando tarea concurrente: " + e.getMessage());
-                    Thread.currentThread().interrupt(); // Reestablecer estado interrumpido
-                    // Podríamos devolver lista vacía o lanzar excepción específica
+                    Thread.currentThread().interrupt();
                     return new ArrayList<>();
                 }
             }
-            return new ArrayList<>(combinedResults); // Convertir Set a List para devolver
+            return new ArrayList<>(combinedResults);
 
         } else {
             // Lógica SECUENCIAL para AND (o consulta simple)
@@ -99,6 +93,22 @@ public class CancionService {
                     .filter(cancion -> matchesCriteria(cancion, criteria))
                     .collect(Collectors.toList());
         }
+    }
+    
+    // Devuelve una lista de todos los artistas únicos en la base de datos.
+    public List<String> getAvailableArtists() {
+        return cancionRepository.findAll().stream()
+            .map(Cancion::getArtista)
+            .distinct()
+            .collect(Collectors.toList());
+    }
+
+    // Devuelve una lista de todos los géneros únicos en la base de datos.
+    public List<String> getAvailableGenres() {
+        return cancionRepository.findAll().stream()
+            .map(Cancion::getGenero)
+            .distinct()
+            .collect(Collectors.toList());
     }
 
     private Map<String, String> parseQuery(String query) {

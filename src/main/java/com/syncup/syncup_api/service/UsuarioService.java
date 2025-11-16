@@ -14,7 +14,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-// Servicio para gestionar la lógica de negocio de Usuarios
 @Service
 public class UsuarioService {
 
@@ -24,10 +23,8 @@ public class UsuarioService {
     @Autowired
     private GrafoSocialService grafoSocialService;
 
-    // Mapa en memoria para almacenar tokens de sesión activos
     private Map<String, String> activeTokens = new HashMap<>();
 
-    // Registra un nuevo usuario en el sistema
     public Usuario registrarUsuario(UserRegistrationRequest request) {
 
         if (usuarioRepository.findByUsername(request.getUsername()).isPresent()) {
@@ -38,22 +35,17 @@ public class UsuarioService {
         nuevoUsuario.setUsername(request.getUsername());
         nuevoUsuario.setNombre(request.getNombre());
         nuevoUsuario.setPassword(request.getPassword());
-        
-        // Guardar los nuevos campos del registro
         nuevoUsuario.setFechaNacimiento(request.getFechaNacimiento());
         nuevoUsuario.setGenero(request.getGenero());
-
         nuevoUsuario.setListaFavoritos(new LinkedList<>());
 
         Usuario usuarioGuardado = usuarioRepository.save(nuevoUsuario);
 
-        // Añadir el nuevo usuario al grafo social en memoria
         grafoSocialService.agregarUsuario(usuarioGuardado);
 
         return usuarioGuardado;
     }
 
-    // Autentica a un usuario y genera un token de sesión
     public LoginResponse loginUsuario(LoginRequest request) {
 
         Optional<Usuario> usuarioOptional = usuarioRepository.findByUsername(request.getUsername());
@@ -61,19 +53,42 @@ public class UsuarioService {
         if (usuarioOptional.isEmpty() || !usuarioOptional.get().getPassword().equals(request.getPassword())) {
             throw new RuntimeException("Credenciales inválidas");
         }
-
-        String token = UUID.randomUUID().toString();
-        activeTokens.put(token, request.getUsername());
-        return new LoginResponse(token);
+        
+        Usuario usuario = usuarioOptional.get();
+        return generateTokenForUser(usuario);
+    }
+    
+    public LoginResponse processGoogleLogin(String username, String nombre) {
+        Optional<Usuario> usuarioOptional = usuarioRepository.findByUsername(username);
+        
+        Usuario usuario;
+        if (usuarioOptional.isPresent()) {
+            usuario = usuarioOptional.get();
+        } else {
+            Usuario nuevoUsuario = new Usuario();
+            nuevoUsuario.setUsername(username);
+            nuevoUsuario.setNombre(nombre);
+            nuevoUsuario.setPassword(null);
+            nuevoUsuario.setListaFavoritos(new LinkedList<>());
+            
+            usuario = usuarioRepository.save(nuevoUsuario);
+            grafoSocialService.agregarUsuario(usuario);
+        }
+        
+        return generateTokenForUser(usuario);
     }
 
-    // Obtiene el nombre de usuario asociado a un token de sesión
+    private LoginResponse generateTokenForUser(Usuario usuario) {
+        String token = UUID.randomUUID().toString();
+        activeTokens.put(token, usuario.getUsername());
+        return new LoginResponse(token, usuario.getNombre(), usuario.isHaCompletadoOnboarding());
+    }
+
     public String getUsernameFromToken(String token) {
         String cleanToken = token.replace("Bearer ", "");
         return activeTokens.get(cleanToken);
     }
 
-    // Obtiene la entidad Usuario completa a partir de un token de sesión
     public Usuario getUserFromToken(String token) {
         String username = getUsernameFromToken(token);
         if (username == null) {
@@ -84,7 +99,6 @@ public class UsuarioService {
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado para el token: " + username));
     }
 
-    // Verifica si un nombre de usuario (email) ya existe en la BD
     public boolean usernameExists(String username) {
         return usuarioRepository.findByUsername(username).isPresent();
     }

@@ -14,8 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
-
- //Controlador REST para gestionar las operaciones relacionadas con las canciones.
+//Controlador REST para gestionar las operaciones relacionadas con las canciones.
 @RestController
 @RequestMapping("/api")
 public class CancionController {
@@ -48,8 +47,8 @@ public class CancionController {
 
         List<Cancion> canciones = recomendacionService.generarDescubrimientoSemanal(20);
         List<SongDto> dtos = canciones.stream()
-            .map(SongDto::new) // Forma corta de llamar al constructor
-            .collect(Collectors.toList());
+                .map(SongDto::new) 
+                .collect(Collectors.toList());
         return ResponseEntity.ok(dtos);
     }
 
@@ -59,21 +58,15 @@ public class CancionController {
             @PathVariable Long songId) {
 
         Cancion cancionSemilla = cancionRepository.findById(songId)
-            .orElseThrow(() -> new RuntimeException("Canción no encontrada: " + songId));
+                .orElseThrow(() -> new RuntimeException("Canción no encontrada: " + songId));
         List<Cancion> radio = recomendacionService.generarRadio(cancionSemilla, 10);
         List<SongDto> dtos = radio.stream()
-            .map(SongDto::new)
-            .collect(Collectors.toList());
+                .map(SongDto::new)
+                .collect(Collectors.toList());
         return ResponseEntity.ok(dtos);
     }
 
-    /**
-     * Endpoint para realizar búsquedas avanzadas de canciones.
-     * Se accede vía: GET /api/songs/search?query=...
-     * Ejemplo query: "artista:Taylor Swift AND anio:2008"
-     * @param query La cadena de consulta con los criterios.
-     * @return Una lista de SongDto que coinciden con la búsqueda.
-     */
+    // Endpoint para realizar búsquedas avanzadas de canciones.
     @GetMapping("/songs/search")
     public ResponseEntity<List<SongDto>> searchSongs(
             @RequestParam("query") String query) {
@@ -83,9 +76,21 @@ public class CancionController {
 
         // Convierte las entidades a DTOs
         List<SongDto> dtos = cancionesEncontradas.stream()
-            .map(SongDto::new)
-            .collect(Collectors.toList());
+                .map(SongDto::new)
+                .collect(Collectors.toList());
 
         return ResponseEntity.ok(dtos);
+    }
+
+    // Endpoint para obtener todos los artistas únicos
+    @GetMapping("/songs/artists")
+    public ResponseEntity<List<String>> getAllArtists() {
+        return ResponseEntity.ok(cancionService.getAvailableArtists());
+    }
+
+    // Endpoint para obtener todos los géneros únicos
+    @GetMapping("/songs/genres")
+    public ResponseEntity<List<String>> getAllGenres() {
+        return ResponseEntity.ok(cancionService.getAvailableGenres());
     }
 }

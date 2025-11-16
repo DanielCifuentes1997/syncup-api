@@ -20,8 +20,6 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;
 
-// Entidad que representa a los usuarios de la plataforma.
-// Almacena información de perfil y relaciones con Canciones y otros Usuarios.
 @Entity
 @Table(name = "usuarios")
 @Getter
@@ -40,15 +38,18 @@ public class Usuario {
     private String password;
     private String nombre;
 
-    // Nuevos campos para el registro estilo Spotify
+   
     private LocalDate fechaNacimiento;
     private String genero;
 
-    // Lista de canciones favoritas del usuario.
+
+    private boolean haCompletadoOnboarding = false;
+
+    
     @ManyToMany
     private List<Cancion> listaFavoritos;
 
-    // Conjunto de usuarios a los que este usuario sigue.
+  
     @ManyToMany
     @JoinTable(
         name = "conexiones_sociales",

@@ -1,6 +1,0 @@
-2025-10-21 11:17:40.179941-05:00 jdbc[3]: exception
-org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "CANCIONES" not found (this database is empty); SQL statement:
-select c1_0.id,c1_0.anio,c1_0.artista,c1_0.duracion,c1_0.genero,c1_0.titulo from canciones c1_0 [42104-232]
-2025-10-21 11:18:28.243759-05:00 jdbc[3]: exception
-org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "CANCIONES" not found (this database is empty); SQL statement:
-select c1_0.id,c1_0.anio,c1_0.artista,c1_0.duracion,c1_0.genero,c1_0.titulo from canciones c1_0 [42104-232]
