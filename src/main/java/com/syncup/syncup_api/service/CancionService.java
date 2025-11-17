@@ -49,20 +49,19 @@ public class CancionService {
         nuevaCancion.setGenero(songDto.getGenero());
         nuevaCancion.setAnio(songDto.getAnio());
         nuevaCancion.setDuracion(songDto.getDuracion());
+        nuevaCancion.setFilename(songDto.getFilename());
 
         Cancion cancionGuardada = cancionRepository.save(nuevaCancion);
         trieService.agregarCancionAlTrie(cancionGuardada);
         return cancionGuardada;
     }
 
-    //Realiza búsqueda avanzada, manejando AND y OR (concurrente).
     public List<Cancion> buscarCancionesAvanzado(String query) {
         List<Cancion> todasLasCanciones = cancionRepository.findAll();
 
         String[] orParts = query.split("(?i)\\s+OR\\s+");
 
         if (orParts.length > 1) {
-            // Lógica CONCURRENTE para OR
             System.out.println("--- [CancionService] Ejecutando búsqueda con OR concurrente.");
 
             List<Future<List<Cancion>>> futures = new ArrayList<>();
@@ -90,7 +89,6 @@ public class CancionService {
             return new ArrayList<>(combinedResults);
 
         } else {
-            // Lógica SECUENCIAL para AND (o consulta simple)
             System.out.println("--- [CancionService] Ejecutando búsqueda simple (AND/única).");
             Map<String, String> criteria = parseQuery(query);
             return todasLasCanciones.stream()
@@ -99,7 +97,6 @@ public class CancionService {
         }
     }
     
-    // Devuelve una lista de todos los artistas únicos en la base de datos.
     public List<String> getAvailableArtists() {
         return cancionRepository.findAll().stream()
             .map(Cancion::getArtista)
@@ -107,7 +104,6 @@ public class CancionService {
             .collect(Collectors.toList());
     }
 
-    // Devuelve una lista de todos los géneros únicos en la base de datos.
     public List<String> getAvailableGenres() {
         return cancionRepository.findAll().stream()
             .map(Cancion::getGenero)
@@ -115,7 +111,6 @@ public class CancionService {
             .collect(Collectors.toList());
     }
     
-    // Devuelve la lista maestra de géneros desde application.properties
     public List<String> getMasterGenres() {
         return Arrays.asList(masterGenresList.split(","));
     }

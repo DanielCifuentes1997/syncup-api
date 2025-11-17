@@ -2,14 +2,19 @@ package com.syncup.syncup_api.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import com.syncup.syncup_api.domain.Cancion;
 import com.syncup.syncup_api.domain.Usuario;
+import com.syncup.syncup_api.dto.OnboardingRequest;
 import com.syncup.syncup_api.dto.UserRegistrationRequest;
+import com.syncup.syncup_api.repository.CancionRepository;
 import com.syncup.syncup_api.repository.UsuarioRepository;
 import com.syncup.syncup_api.dto.LoginRequest;
 import com.syncup.syncup_api.dto.LoginResponse;
 
+import org.springframework.transaction.annotation.Transactional;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -22,6 +27,9 @@ public class UsuarioService {
 
     @Autowired
     private GrafoSocialService grafoSocialService;
+
+    @Autowired
+    private CancionRepository cancionRepository;
 
     private Map<String, String> activeTokens = new HashMap<>();
 
@@ -50,11 +58,20 @@ public class UsuarioService {
 
         Optional<Usuario> usuarioOptional = usuarioRepository.findByUsername(request.getUsername());
 
-        if (usuarioOptional.isEmpty() || !usuarioOptional.get().getPassword().equals(request.getPassword())) {
+        if (usuarioOptional.isEmpty()) {
+            throw new RuntimeException("Credenciales inválidas");
+        }
+
+        Usuario usuario = usuarioOptional.get();
+
+        if (usuario.getPassword() == null) {
+            throw new RuntimeException("Este usuario fue registrado con Google. Por favor, use 'Iniciar con Google'.");
+        }
+
+        if (!usuario.getPassword().equals(request.getPassword())) {
             throw new RuntimeException("Credenciales inválidas");
         }
         
-        Usuario usuario = usuarioOptional.get();
         return generateTokenForUser(usuario);
     }
     
@@ -97,6 +114,36 @@ public class UsuarioService {
 
         return usuarioRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado para el token: " + username));
+    }
+
+    @Transactional
+    public void completeOnboarding(String username, OnboardingRequest request) {
+        Usuario usuario = usuarioRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado: " + username));
+
+        List<String> artistas = request.getArtistas();
+        List<String> generos = request.getGeneros();
+
+        if (artistas != null && !artistas.isEmpty()) {
+            List<Cancion> cancionesPorArtista = cancionRepository.findByArtistaIn(artistas);
+            cancionesPorArtista.forEach(cancion -> {
+                if (!usuario.getListaFavoritos().contains(cancion)) {
+                    usuario.getListaFavoritos().add(cancion);
+                }
+            });
+        }
+
+        if (generos != null && !generos.isEmpty()) {
+            List<Cancion> cancionesPorGenero = cancionRepository.findByGeneroIn(generos);
+            cancionesPorGenero.forEach(cancion -> {
+                if (!usuario.getListaFavoritos().contains(cancion)) {
+                    usuario.getListaFavoritos().add(cancion);
+                }
+            });
+        }
+
+        usuario.setHaCompletadoOnboarding(true);
+        usuarioRepository.save(usuario);
     }
 
     public boolean usernameExists(String username) {
