@@ -2,6 +2,7 @@ package com.syncup.syncup_api.config;
 
 import com.syncup.syncup_api.dto.LoginResponse;
 import com.syncup.syncup_api.security.CustomOAuth2UserService;
+import com.syncup.syncup_api.security.TokenAuthenticationFilter; // <--- 1. IMPORTAR
 import com.syncup.syncup_api.service.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -12,6 +13,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter; // <--- 2. IMPORTAR
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -27,6 +29,9 @@ public class SecurityConfig {
 
     @Autowired
     private UsuarioService usuarioService;
+
+    @Autowired
+    private TokenAuthenticationFilter tokenAuthenticationFilter; // <--- 3. INYECTAR EL FILTRO
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -45,6 +50,11 @@ public class SecurityConfig {
                 .successHandler(authenticationSuccessHandler())
             );
         
+        // --- 4. AÑADIR ESTA LÍNEA ---
+        // Esto le dice a Spring que use nuestro filtro de token ANTES de sus filtros de autenticación por defecto
+        http.addFilterBefore(tokenAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+        // -------------------------
+
         http.headers(headers -> headers.frameOptions(frameOptions -> frameOptions.sameOrigin()));
 
         return http.build();

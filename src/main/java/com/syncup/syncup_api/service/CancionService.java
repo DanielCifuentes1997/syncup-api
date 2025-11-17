@@ -5,6 +5,7 @@ import com.syncup.syncup_api.dto.SongCreateDto;
 import com.syncup.syncup_api.repository.CancionRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,6 +37,9 @@ public class CancionService {
 
     @Autowired
     private ExecutorService taskExecutor;
+
+    @Value("${syncup.genres.master-list}")
+    private String masterGenresList;
 
     @Transactional
     public Cancion crearCancion(SongCreateDto songDto) {
@@ -109,6 +113,11 @@ public class CancionService {
             .map(Cancion::getGenero)
             .distinct()
             .collect(Collectors.toList());
+    }
+    
+    // Devuelve la lista maestra de géneros desde application.properties
+    public List<String> getMasterGenres() {
+        return Arrays.asList(masterGenresList.split(","));
     }
 
     private Map<String, String> parseQuery(String query) {

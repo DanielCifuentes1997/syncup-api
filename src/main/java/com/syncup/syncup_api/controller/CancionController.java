@@ -28,7 +28,6 @@ public class CancionController {
     @Autowired
     private CancionRepository cancionRepository;
 
-    // Inyectamos el nuevo CancionService
     @Autowired
     private CancionService cancionService;
 
@@ -71,10 +70,8 @@ public class CancionController {
     public ResponseEntity<List<SongDto>> searchSongs(
             @RequestParam("query") String query) {
 
-        // Llama al servicio para realizar la búsqueda avanzada
         List<Cancion> cancionesEncontradas = cancionService.buscarCancionesAvanzado(query);
 
-        // Convierte las entidades a DTOs
         List<SongDto> dtos = cancionesEncontradas.stream()
                 .map(SongDto::new)
                 .collect(Collectors.toList());
@@ -88,9 +85,15 @@ public class CancionController {
         return ResponseEntity.ok(cancionService.getAvailableArtists());
     }
 
-    // Endpoint para obtener todos los géneros únicos
+    // Endpoint para obtener todos los géneros únicos (del catálogo de canciones)
     @GetMapping("/songs/genres")
     public ResponseEntity<List<String>> getAllGenres() {
         return ResponseEntity.ok(cancionService.getAvailableGenres());
+    }
+
+    // Endpoint para obtener la lista maestra de géneros (para el asistente)
+    @GetMapping("/genres/master")
+    public ResponseEntity<List<String>> getMasterGenres() {
+        return ResponseEntity.ok(cancionService.getMasterGenres());
     }
 }
