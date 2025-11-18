@@ -4,10 +4,12 @@ import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
 import com.syncup.syncup_api.domain.Cancion;
 import com.syncup.syncup_api.domain.Usuario;
+import com.syncup.syncup_api.dto.AdminDashboardMetricsDto;
 import com.syncup.syncup_api.dto.SongCreateDto;
 import com.syncup.syncup_api.dto.SongDto;
 import com.syncup.syncup_api.dto.UserDto;
 import com.syncup.syncup_api.service.CancionService;
+import com.syncup.syncup_api.service.MetricsService;
 import com.syncup.syncup_api.service.UsuarioService;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,6 +43,14 @@ public class AdminController {
 
     @Autowired
     private UsuarioService usuarioService;
+
+    @Autowired
+    private MetricsService metricsService;
+
+    @GetMapping("/metrics")
+    public ResponseEntity<AdminDashboardMetricsDto> getDashboardMetrics() {
+        return ResponseEntity.ok(metricsService.getDashboardMetrics());
+    }
 
     @GetMapping("/songs")
     public ResponseEntity<List<SongDto>> getAllSongs() {
