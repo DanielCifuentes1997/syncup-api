@@ -1,6 +1,7 @@
 package com.syncup.syncup_api.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import com.syncup.syncup_api.domain.Cancion;
 import com.syncup.syncup_api.domain.Usuario;
@@ -11,13 +12,22 @@ import com.syncup.syncup_api.repository.UsuarioRepository;
 import com.syncup.syncup_api.dto.LoginRequest;
 import com.syncup.syncup_api.dto.LoginResponse;
 
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
+
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Bean;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+
+import javax.crypto.SecretKey;
 
 @Service
 public class UsuarioService {
@@ -31,8 +41,12 @@ public class UsuarioService {
     @Autowired
     private CancionRepository cancionRepository;
 
-    private Map<String, String> activeTokens = new HashMap<>();
+    @Value("${jwt.secret:default-secret-key-for-syncup-project}")
+    private String jwtSecret;
 
+    private SecretKey key;
+
+    @Transactional
     public Usuario registrarUsuario(UserRegistrationRequest request) {
 
         if (usuarioRepository.findByUsername(request.getUsername()).isPresent()) {
@@ -46,6 +60,7 @@ public class UsuarioService {
         nuevoUsuario.setFechaNacimiento(request.getFechaNacimiento());
         nuevoUsuario.setGenero(request.getGenero());
         nuevoUsuario.setListaFavoritos(new LinkedList<>());
+        nuevoUsuario.setRol("USER");
 
         Usuario usuarioGuardado = usuarioRepository.save(nuevoUsuario);
 
@@ -75,6 +90,7 @@ public class UsuarioService {
         return generateTokenForUser(usuario);
     }
     
+    @Transactional
     public LoginResponse processGoogleLogin(String username, String nombre) {
         Optional<Usuario> usuarioOptional = usuarioRepository.findByUsername(username);
         
@@ -87,6 +103,7 @@ public class UsuarioService {
             nuevoUsuario.setNombre(nombre);
             nuevoUsuario.setPassword(null);
             nuevoUsuario.setListaFavoritos(new LinkedList<>());
+            nuevoUsuario.setRol("USER");
             
             usuario = usuarioRepository.save(nuevoUsuario);
             grafoSocialService.agregarUsuario(usuario);
@@ -96,14 +113,53 @@ public class UsuarioService {
     }
 
     private LoginResponse generateTokenForUser(Usuario usuario) {
-        String token = UUID.randomUUID().toString();
-        activeTokens.put(token, usuario.getUsername());
-        return new LoginResponse(token, usuario.getNombre(), usuario.isHaCompletadoOnboarding());
+        if (key == null) {
+            this.key = Keys.hmacShaKeyFor(jwtSecret.getBytes());
+        }
+        
+        long now = System.currentTimeMillis();
+        long expirationTime = 3600000;
+        
+        String jwtToken = Jwts.builder()
+                .setSubject(usuario.getUsername())
+                .setIssuedAt(new Date(now))
+                .setExpiration(new Date(now + expirationTime))
+                .claim("nombre", usuario.getNombre())
+                .claim("rol", usuario.getRol())
+                .signWith(key)
+                .compact();
+
+        return new LoginResponse(jwtToken, usuario.getNombre(), usuario.isHaCompletadoOnboarding());
+    }
+
+    private Claims getClaims(String token) {
+        if (key == null) {
+            this.key = Keys.hmacShaKeyFor(jwtSecret.getBytes());
+        }
+        
+        String cleanToken = token.startsWith("Bearer ") ? token.substring(7) : token;
+        
+        return Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(cleanToken)
+                .getBody();
     }
 
     public String getUsernameFromToken(String token) {
-        String cleanToken = token.replace("Bearer ", "");
-        return activeTokens.get(cleanToken);
+        try {
+            return getClaims(token).getSubject();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public String getRoleFromToken(String token) {
+         try {
+            return getClaims(token).get("rol", String.class);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     public Usuario getUserFromToken(String token) {
@@ -148,5 +204,79 @@ public class UsuarioService {
 
     public boolean usernameExists(String username) {
         return usuarioRepository.findByUsername(username).isPresent();
+    }
+
+    @Transactional
+    public List<Cancion> addFavorite(String username, Long songId) {
+        Usuario usuarioActual = usuarioRepository.findByUsername(username)
+            .orElseThrow(() -> new RuntimeException("Usuario no encontrado: " + username));
+        
+        Cancion cancion = cancionRepository.findById(songId)
+            .orElseThrow(() -> new RuntimeException("Canción no encontrada: " + songId));
+
+        if (!usuarioActual.getListaFavoritos().contains(cancion)) {
+            usuarioActual.getListaFavoritos().add(cancion);
+        }
+        
+        return usuarioActual.getListaFavoritos();
+    }
+
+    @Transactional
+    public List<Cancion> removeFavorite(String username, Long songId) {
+        Usuario usuarioActual = usuarioRepository.findByUsername(username)
+            .orElseThrow(() -> new RuntimeException("Usuario no encontrado: " + username));
+
+        Cancion cancion = cancionRepository.findById(songId)
+            .orElseThrow(() -> new RuntimeException("Canción no encontrada: " + songId));
+
+        usuarioActual.getListaFavoritos().remove(cancion);
+        
+        return usuarioActual.getListaFavoritos();
+    }
+    
+    @Bean
+    CommandLineRunner initAdminUser() {
+        return args -> {
+            if (usuarioRepository.findByUsername("admin").isEmpty()) {
+                System.out.println("--- Creando usuario ADMIN por defecto ---");
+                Usuario admin = new Usuario();
+                admin.setUsername("admin");
+                admin.setNombre("Admin SyncUp");
+                admin.setPassword("admin123");
+                admin.setRol("ADMIN");
+                admin.setListaFavoritos(new LinkedList<>());
+                admin.setHaCompletadoOnboarding(true);
+                
+                Usuario adminGuardado = usuarioRepository.save(admin);
+                grafoSocialService.agregarUsuario(adminGuardado);
+                System.out.println("--- Usuario ADMIN creado: admin / admin123 ---");
+            }
+        };
+    }
+
+    public List<Usuario> getAllUsers() {
+        return usuarioRepository.findAll();
+    }
+
+    @Transactional
+    public void deleteUser(Long userId) {
+        Usuario usuarioAEliminar = usuarioRepository.findById(userId)
+            .orElseThrow(() -> new RuntimeException("Usuario no encontrado para eliminar: " + userId));
+
+        if ("ADMIN".equals(usuarioAEliminar.getRol())) {
+            throw new RuntimeException("No se puede eliminar a un usuario administrador.");
+        }
+
+        grafoSocialService.eliminarUsuario(usuarioAEliminar);
+
+        List<Usuario> todos = usuarioRepository.findAll();
+        for (Usuario u : todos) {
+            u.getSeguidos().remove(usuarioAEliminar);
+        }
+
+        usuarioAEliminar.setListaFavoritos(null);
+        usuarioAEliminar.setSeguidos(null);
+        
+        usuarioRepository.delete(usuarioAEliminar);
     }
 }

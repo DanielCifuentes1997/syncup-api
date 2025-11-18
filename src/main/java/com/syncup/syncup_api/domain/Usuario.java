@@ -42,6 +42,7 @@ public class Usuario {
     private LocalDate fechaNacimiento;
     private String genero;
 
+    private String rol;
 
     private boolean haCompletadoOnboarding = false;
 

@@ -1,0 +1,18 @@
+2025-11-17 21:24:22.393179-05:00 jdbc[13]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Tabla "CANCION" no encontrada
+Table "CANCION" not found; SQL statement:
+SELECT * FROM CANCION [42102-232]
+2025-11-17 21:24:47.013140-05:00 jdbc[13]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Tabla "CANCION" no encontrada
+Table "CANCION" not found; SQL statement:
+UPDATE CANCION 
+SET FILENAME = 'All Time.mp3' 
+WHERE TITULO = 'All Time' [42102-232]
+2025-11-17 21:28:05.150606-05:00 jdbc[13]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Error de Sintaxis en sentencia SQL "[*]CANCIONES"; se esperaba "COMMIT, CREATE, CALL, CHECKPOINT, COMMENT"
+Syntax error in SQL statement "[*]CANCIONES"; expected "COMMIT, CREATE, CALL, CHECKPOINT, COMMENT"; SQL statement:
+CANCIONES [42001-232]
+2025-11-17 21:54:18.006817-05:00 jdbc[13]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Error de Sintaxis en sentencia SQL "SELECT FROM [*]* CANCIONES"; se esperaba "identifier"
+Syntax error in SQL statement "SELECT FROM [*]* CANCIONES"; expected "identifier"; SQL statement:
+SELECT FROM * CANCIONES [42001-232]

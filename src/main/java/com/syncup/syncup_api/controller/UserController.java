@@ -90,16 +90,10 @@ public class UserController {
             @RequestHeader("Authorization") String token,
             @PathVariable Long songId) {
 
-        Usuario usuarioActual = usuarioService.getUserFromToken(token);
-        Cancion cancion = cancionRepository.findById(songId)
-            .orElseThrow(() -> new RuntimeException("Canción no encontrada: " + songId));
+        String username = usuarioService.getUsernameFromToken(token);
+        List<Cancion> favoritas = usuarioService.addFavorite(username, songId);
 
-        if (!usuarioActual.getListaFavoritos().contains(cancion)) {
-            usuarioActual.getListaFavoritos().add(cancion);
-            usuarioRepository.save(usuarioActual);
-        }
-
-        List<SongDto> favoritasDto = usuarioActual.getListaFavoritos().stream()
+        List<SongDto> favoritasDto = favoritas.stream()
                 .map(SongDto::new)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(favoritasDto);
@@ -110,15 +104,21 @@ public class UserController {
             @RequestHeader("Authorization") String token,
             @PathVariable Long songId) {
 
+        String username = usuarioService.getUsernameFromToken(token);
+        List<Cancion> favoritas = usuarioService.removeFavorite(username, songId);
+
+        List<SongDto> favoritasDto = favoritas.stream()
+                .map(SongDto::new)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(favoritasDto);
+    }
+
+    @GetMapping("/me/favorites")
+    public ResponseEntity<List<SongDto>> getFavorites(
+            @RequestHeader("Authorization") String token) {
+
         Usuario usuarioActual = usuarioService.getUserFromToken(token);
-        Cancion cancion = cancionRepository.findById(songId)
-            .orElseThrow(() -> new RuntimeException("Canción no encontrada: " + songId));
-
-        boolean removed = usuarioActual.getListaFavoritos().remove(cancion);
-        if (removed) {
-            usuarioRepository.save(usuarioActual);
-        }
-
+        
         List<SongDto> favoritasDto = usuarioActual.getListaFavoritos().stream()
                 .map(SongDto::new)
                 .collect(Collectors.toList());

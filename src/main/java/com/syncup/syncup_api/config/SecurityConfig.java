@@ -7,9 +7,10 @@ import com.syncup.syncup_api.service.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod; 
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.http.SessionCreationPolicy; // <--- Asegúrate que este import existe
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
@@ -35,9 +36,25 @@ public class SecurityConfig {
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // <--- AQUÍ
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(authz -> authz
-                .requestMatchers("/api/auth/**", "/login/oauth2/code/google", "/h2-console/**").permitAll()
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() 
+                .requestMatchers(
+                    "/api/auth/**", 
+                    "/login/oauth2/code/google", 
+                    "/h2-console/**",
+                    "/music/**" 
+                ).permitAll()
+                
+                .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
+                
+                .requestMatchers(
+                    "/api/users/**",
+                    "/api/songs/**",
+                    "/api/recommendations/**",
+                    "/api/genres/**"
+                ).hasAuthority("USER")
+                
                 .anyRequest().authenticated()
             )
             .oauth2Login(oauth2 -> oauth2

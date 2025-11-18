@@ -3,14 +3,21 @@ package com.syncup.syncup_api.controller;
 import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
 import com.syncup.syncup_api.domain.Cancion;
+import com.syncup.syncup_api.domain.Usuario;
 import com.syncup.syncup_api.dto.SongCreateDto;
 import com.syncup.syncup_api.dto.SongDto;
+import com.syncup.syncup_api.dto.UserDto;
 import com.syncup.syncup_api.service.CancionService;
+import com.syncup.syncup_api.service.UsuarioService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam; 
@@ -23,6 +30,7 @@ import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/admin") 
@@ -31,11 +39,38 @@ public class AdminController {
     @Autowired
     private CancionService cancionService;
 
+    @Autowired
+    private UsuarioService usuarioService;
+
+    @GetMapping("/songs")
+    public ResponseEntity<List<SongDto>> getAllSongs() {
+        List<Cancion> canciones = cancionService.getAllSongs();
+        List<SongDto> dtos = canciones.stream()
+            .map(SongDto::new)
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(dtos);
+    }
+
     @PostMapping("/songs")
     public ResponseEntity<SongDto> addSong(@RequestBody SongCreateDto songDto) {
         Cancion cancionGuardada = cancionService.crearCancion(songDto);
         SongDto respuestaDto = new SongDto(cancionGuardada);
         return new ResponseEntity<>(respuestaDto, HttpStatus.CREATED);
+    }
+
+    @PutMapping("/songs/{id}")
+    public ResponseEntity<SongDto> updateSong(
+            @PathVariable Long id, 
+            @RequestBody SongCreateDto songDto) {
+        Cancion cancionActualizada = cancionService.updateSong(id, songDto);
+        SongDto respuestaDto = new SongDto(cancionActualizada);
+        return ResponseEntity.ok(respuestaDto);
+    }
+
+    @DeleteMapping("/songs/{id}")
+    public ResponseEntity<Void> deleteSong(@PathVariable Long id) {
+        cancionService.deleteSong(id);
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/songs/bulk-upload")
@@ -94,5 +129,20 @@ public class AdminController {
         }
 
         return ResponseEntity.ok(responseMessage.toString());
+    }
+
+    @GetMapping("/users")
+    public ResponseEntity<List<UserDto>> getAllUsers() {
+        List<Usuario> usuarios = usuarioService.getAllUsers();
+        List<UserDto> dtos = usuarios.stream()
+            .map(UserDto::new)
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(dtos);
+    }
+
+    @DeleteMapping("/users/{id}")
+    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+        usuarioService.deleteUser(id);
+        return ResponseEntity.noContent().build();
     }
 }

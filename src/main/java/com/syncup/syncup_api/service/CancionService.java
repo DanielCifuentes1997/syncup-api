@@ -1,8 +1,10 @@
 package com.syncup.syncup_api.service;
 
 import com.syncup.syncup_api.domain.Cancion;
+import com.syncup.syncup_api.domain.Usuario;
 import com.syncup.syncup_api.dto.SongCreateDto;
 import com.syncup.syncup_api.repository.CancionRepository;
+import com.syncup.syncup_api.repository.UsuarioRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,6 +30,9 @@ public class CancionService {
 
     @Autowired
     private CancionRepository cancionRepository;
+
+    @Autowired
+    private UsuarioRepository usuarioRepository;
 
     @Autowired
     private TrieService trieService;
@@ -59,11 +64,19 @@ public class CancionService {
     public List<Cancion> buscarCancionesAvanzado(String query) {
         List<Cancion> todasLasCanciones = cancionRepository.findAll();
 
+        boolean isSimpleQuery = !query.contains(":") && !query.matches("(?i).*\\s+(OR|AND)\\s+.*");
+
+        if (isSimpleQuery) {
+            String lowerQuery = query.toLowerCase().trim();
+            return todasLasCanciones.stream()
+                .filter(cancion -> cancion.getTitulo() != null && 
+                                   cancion.getTitulo().toLowerCase().contains(lowerQuery))
+                .collect(Collectors.toList());
+        }
+
         String[] orParts = query.split("(?i)\\s+OR\\s+");
 
         if (orParts.length > 1) {
-            System.out.println("--- [CancionService] Ejecutando búsqueda con OR concurrente.");
-
             List<Future<List<Cancion>>> futures = new ArrayList<>();
 
             for (String orPart : orParts) {
@@ -89,7 +102,6 @@ public class CancionService {
             return new ArrayList<>(combinedResults);
 
         } else {
-            System.out.println("--- [CancionService] Ejecutando búsqueda simple (AND/única).");
             Map<String, String> criteria = parseQuery(query);
             return todasLasCanciones.stream()
                     .filter(cancion -> matchesCriteria(cancion, criteria))
@@ -128,13 +140,16 @@ public class CancionService {
                 String value = keyValue[1].trim();
                 criteria.put(key, value);
             } else {
-                System.err.println("Skipping malformed query part: " + part);
             }
         }
         return criteria;
     }
 
     private boolean matchesCriteria(Cancion cancion, Map<String, String> criteria) {
+        if (criteria.isEmpty()) {
+            return false;
+        }
+
         for (Map.Entry<String, String> entry : criteria.entrySet()) {
             String key = entry.getKey();
             String expectedValue = entry.getValue();
@@ -151,5 +166,39 @@ public class CancionService {
             }
         }
         return true;
+    }
+
+    public List<Cancion> getAllSongs() {
+        return cancionRepository.findAll();
+    }
+
+    @Transactional
+    public Cancion updateSong(Long songId, SongCreateDto songDetails) {
+        Cancion cancion = cancionRepository.findById(songId)
+            .orElseThrow(() -> new RuntimeException("Canción no encontrada: " + songId));
+
+        cancion.setTitulo(songDetails.getTitulo());
+        cancion.setArtista(songDetails.getArtista());
+        cancion.setGenero(songDetails.getGenero());
+        cancion.setAnio(songDetails.getAnio());
+        cancion.setDuracion(songDetails.getDuracion());
+        cancion.setFilename(songDetails.getFilename());
+        
+        return cancionRepository.save(cancion);
+    }
+
+    @Transactional
+    public void deleteSong(Long songId) {
+        Cancion cancion = cancionRepository.findById(songId)
+            .orElseThrow(() -> new RuntimeException("Canción no encontrada: " + songId));
+
+        List<Usuario> usuarios = usuarioRepository.findAll();
+        for (Usuario usuario : usuarios) {
+            usuario.getListaFavoritos().remove(cancion);
+        }
+        
+        trieService.eliminarCancionDelTrie(cancion);
+        
+        cancionRepository.delete(cancion);
     }
 }

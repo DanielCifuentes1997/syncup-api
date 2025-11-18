@@ -56,4 +56,8 @@ public class GrafoSocialService {
     public void agregarUsuario(Usuario usuario) {
         grafo.agregarUsuario(usuario);
     }
+    
+    public void eliminarUsuario(Usuario usuario) {
+        grafo.eliminarUsuario(usuario);
+    }
 }
