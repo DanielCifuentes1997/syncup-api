@@ -6,7 +6,7 @@ import java.util.Map;
 /**
  * Representa un nodo individual en el árbol Trie.
  * Cada nodo tiene dos componentes principales:
- * 1. Un mapa de 'hijos' (Map<Character, TrieNode>) que almacena la
+ * 1. Un mapa de 'hijos' (Map Character, TrieNode) que almacena la
  * siguiente letra posible en la palabra.
  * 2. Un booleano 'isEndOfWord' que marca si este nodo es el
  * final de una palabra completa.
