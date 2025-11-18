@@ -1,7 +1,10 @@
+
 ### Bulk Upload Songs CSV
 # @name bulkUpload
+
 POST http://localhost:8080/api/admin/songs/bulk-upload
 Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJzdG1pdGgwMEBnbWFpbC5jb20iLCJpYXQiOjE3NjM0MzQyODEsImV4cCI6MTc2MzQzNzg4MSwibm9tYnJlIjoiRGFuaWVsIEJsYW5kw7NuIn0.CUQlJSoAKx6wFsVcuYXHNfUIYyodLAXNnyU_UWSgaEg
 
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
 Content-Disposition: form-data; name="file"; filename="canciones.csv"

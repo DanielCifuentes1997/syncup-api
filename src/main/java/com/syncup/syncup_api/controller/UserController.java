@@ -6,8 +6,10 @@ import com.opencsv.exceptions.CsvDataTypeMismatchException;
 import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
 import com.syncup.syncup_api.domain.Cancion;
 import com.syncup.syncup_api.domain.Usuario;
+import com.syncup.syncup_api.dto.OnboardingRequest;
 import com.syncup.syncup_api.dto.SongDto;
 import com.syncup.syncup_api.dto.UserDto;
+import com.syncup.syncup_api.dto.UserUpdateDto;
 import com.syncup.syncup_api.repository.CancionRepository;
 import com.syncup.syncup_api.repository.UsuarioRepository;
 import com.syncup.syncup_api.service.GrafoSocialService;
@@ -24,7 +26,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-// Controlador para gestionar las acciones del usuario autenticado
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
@@ -41,7 +42,6 @@ public class UserController {
     @Autowired
     private CancionRepository cancionRepository;
 
-    // Endpoint para seguir a otro usuario
     @PostMapping("/follow/{usernameToFollow}")
     public ResponseEntity<String> followUser(
             @RequestHeader("Authorization") String token,
@@ -51,7 +51,6 @@ public class UserController {
         Usuario seguido = usuarioRepository.findByUsername(usernameToFollow)
             .orElseThrow(() -> new RuntimeException("Usuario a seguir no encontrado: " + usernameToFollow));
 
-        // Evitar seguirse a sí mismo
         if(seguidor.equals(seguido)) {
              throw new RuntimeException("No puedes seguirte a ti mismo.");
         }
@@ -63,7 +62,6 @@ public class UserController {
         return ResponseEntity.ok(seguidor.getUsername() + " ahora sigue a " + seguido.getUsername());
     }
 
-    // Endpoint para obtener sugerencias de usuarios a seguir
     @GetMapping("/suggestions")
     public ResponseEntity<List<UserDto>> getSuggestions(
             @RequestHeader("Authorization") String token) {
@@ -78,54 +76,56 @@ public class UserController {
         return ResponseEntity.ok(sugerenciasDto);
     }
 
-    // Endpoint para añadir una canción a los favoritos del usuario actual
+    @PostMapping("/me/onboarding")
+    public ResponseEntity<Void> completeOnboarding(
+            @RequestHeader("Authorization") String token,
+            @RequestBody OnboardingRequest request) {
+        
+        String username = usuarioService.getUsernameFromToken(token);
+        usuarioService.completeOnboarding(username, request);
+        return ResponseEntity.ok().build();
+    }
+
     @PostMapping("/me/favorites/{songId}")
     public ResponseEntity<List<SongDto>> addFavorite(
             @RequestHeader("Authorization") String token,
             @PathVariable Long songId) {
 
-        Usuario usuarioActual = usuarioService.getUserFromToken(token);
-        Cancion cancion = cancionRepository.findById(songId)
-            .orElseThrow(() -> new RuntimeException("Canción no encontrada: " + songId));
+        String username = usuarioService.getUsernameFromToken(token);
+        List<Cancion> favoritas = usuarioService.addFavorite(username, songId);
 
-        // Añadir a favoritos si no está ya
-        if (!usuarioActual.getListaFavoritos().contains(cancion)) {
-            usuarioActual.getListaFavoritos().add(cancion);
-            usuarioRepository.save(usuarioActual);
-        }
-
-        // Devolver la lista actualizada de favoritos
-        List<SongDto> favoritasDto = usuarioActual.getListaFavoritos().stream()
+        List<SongDto> favoritasDto = favoritas.stream()
                 .map(SongDto::new)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(favoritasDto);
     }
 
-    // Endpoint para eliminar una canción de los favoritos del usuario actual
     @DeleteMapping("/me/favorites/{songId}")
     public ResponseEntity<List<SongDto>> removeFavorite(
             @RequestHeader("Authorization") String token,
             @PathVariable Long songId) {
 
+        String username = usuarioService.getUsernameFromToken(token);
+        List<Cancion> favoritas = usuarioService.removeFavorite(username, songId);
+
+        List<SongDto> favoritasDto = favoritas.stream()
+                .map(SongDto::new)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(favoritasDto);
+    }
+
+    @GetMapping("/me/favorites")
+    public ResponseEntity<List<SongDto>> getFavorites(
+            @RequestHeader("Authorization") String token) {
+
         Usuario usuarioActual = usuarioService.getUserFromToken(token);
-        Cancion cancion = cancionRepository.findById(songId)
-            .orElseThrow(() -> new RuntimeException("Canción no encontrada: " + songId));
-
-        // Quitar de favoritos si existe
-        boolean removed = usuarioActual.getListaFavoritos().remove(cancion);
-        if (removed) {
-            usuarioRepository.save(usuarioActual);
-        }
-
-        // Devolver la lista actualizada de favoritos
+        
         List<SongDto> favoritasDto = usuarioActual.getListaFavoritos().stream()
                 .map(SongDto::new)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(favoritasDto);
     }
 
-
-    // Endpoint para exportar las canciones favoritas del usuario actual a CSV
     @GetMapping("/me/favorites/export")
     public void exportFavorites(
             @RequestHeader("Authorization") String token,
@@ -133,7 +133,6 @@ public class UserController {
 
         Usuario usuarioActual = usuarioService.getUserFromToken(token);
 
-        // Configurar cabeceras HTTP para descarga
         response.setContentType("text/csv");
         response.setHeader(HttpHeaders.CONTENT_DISPOSITION,
                 "attachment; filename=\"favoritos_" + usuarioActual.getUsername() + ".csv\"");
@@ -144,19 +143,55 @@ public class UserController {
                     .map(SongDto::new)
                     .collect(Collectors.toList());
 
-            // Escribir DTOs a la respuesta usando OpenCSV
             StatefulBeanToCsv<SongDto> writer = new StatefulBeanToCsvBuilder<SongDto>(response.getWriter())
                     .withQuotechar(com.opencsv.ICSVWriter.NO_QUOTE_CHARACTER)
                     .withSeparator(',')
-                    .withOrderedResults(false) // No forzar orden alfabético de columnas
+                    .withOrderedResults(false) 
                     .build();
 
             writer.write(favoritasDto);
 
         } catch (IOException | CsvDataTypeMismatchException | CsvRequiredFieldEmptyException e) {
-            // Manejo básico de errores
             System.err.println("Error al exportar CSV de favoritos: " + e.getMessage());
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
+    }
+
+    @PutMapping("/me")
+    public ResponseEntity<UserDto> updateProfile(
+            @RequestHeader("Authorization") String token,
+            @RequestBody UserUpdateDto updateDto) {
+        
+        String username = usuarioService.getUsernameFromToken(token);
+        Usuario usuarioActualizado = usuarioService.updateUser(username, updateDto);
+        
+        return ResponseEntity.ok(new UserDto(usuarioActualizado));
+    }
+    
+    @GetMapping("/search")
+    public ResponseEntity<List<UserDto>> searchUsers(@RequestParam String query) {
+        List<Usuario> usuarios = usuarioService.searchUsers(query);
+        
+        List<UserDto> dtos = usuarios.stream()
+                .map(UserDto::new)
+                .collect(Collectors.toList());
+        
+        return ResponseEntity.ok(dtos);
+    }
+    @GetMapping("/profile/{username}")
+    public ResponseEntity<UserDto> getPublicProfile(@PathVariable String username) {
+        Usuario usuario = usuarioService.getUserByUsername(username);
+        return ResponseEntity.ok(new UserDto(usuario));
+    }
+
+    @GetMapping("/profile/{username}/favorites")
+    public ResponseEntity<List<SongDto>> getPublicFavorites(@PathVariable String username) {
+        Usuario usuario = usuarioService.getUserByUsername(username);
+        
+        List<SongDto> favoritasDto = usuario.getListaFavoritos().stream()
+                .map(SongDto::new)
+                .collect(Collectors.toList());
+        
+        return ResponseEntity.ok(favoritasDto);
     }
 }

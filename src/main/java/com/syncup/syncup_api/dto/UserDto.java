@@ -3,23 +3,18 @@ package com.syncup.syncup_api.dto;
 import com.syncup.syncup_api.domain.Usuario;
 import lombok.Data;
 
-/**
- * DTO (Data Transfer Object) para representar la información
- * pública de un usuario. Se usa para evitar exponer
- * campos sensibles (como la contraseña) en las respuestas de la API.
- */
 @Data
 public class UserDto {
 
+    private Long id;
     private String username;
     private String nombre;
+    private String rol;
 
-    /**
-     * Constructor que facilita la conversión
-     * de una entidad Usuario (de la BD) a un UserDto (para la API).
-     */
     public UserDto(Usuario usuario) {
+        this.id = usuario.getId();
         this.username = usuario.getUsername();
         this.nombre = usuario.getNombre();
+        this.rol = usuario.getRol();
     }
 }

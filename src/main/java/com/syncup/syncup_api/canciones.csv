@@ -1,8 +1,28 @@
-Titulo,Artista,Genero,Anio,Duracion
-Blinding Lights,The Weeknd,Synth-pop,2019,200
-Shape of You,Ed Sheeran,Pop,2017,233
-Someone You Loved,Lewis Capaldi,Pop,2018,182
-Rolling in the Deep,Adele,Soul,2010,228
-Viva La Vida,Coldplay,Alternative Rock,2008,242
-Hotel California,Eagles,Rock,1976,391
-Yesterday,The Beatles,Pop,1965,125
+Titulo,Artista,Genero,Anio,Duracion,Filename
+All Eyez On Me,2Pac,Hip Hop,1996,269,All Eyez On Me.mp3
+Do For Love,2Pac,Rap,1997,252,Do For Love.mp3
+Hit Em Up,2Pac,Rap,1996,319,Hit Em Up.mp3
+Como Antes,Bad Bunny,Trap,2018,200,Como Antes.mp3
+Otra Noche en Miami,Bad Bunny,Trap,2018,200,Otra Noche en Miami.mp3
+RLNDT,Bad Bunny,Trap,2018,0,RLNDT.mp3
+Solo de Mi,Bad Bunny,Trap,2018,0,Solo de Mi.mp3
+Condenado al Exito III,Blessd,Trap,2025,188,Condenado al Exito III.mp3
+Yogurcito,Blessd,Trap,2024,183,Yogurcito.mp3
+Amor Narcotico,Chichi Peralta,Merengue,1997,0,Amor Narcotico.mp3
+La Ciguapa,Chichi Peralta,Merengue,1997,0,La Ciguapa.mp3
+Procura,Chichi Peralta,Merengue,1997,0,Procura.mp3
+1204,De La Rose,Urbano,2025,235,1204.mp3
+All Time,De La Rose,Urbano,2025,174,All Time.mp3
+Nubes,De La Rose,Urbano,2025,271,Nubes.mp3
+Luna,Feid,Reggaeton,2024,196,Luna.mp3
+NEA,Feid,Reggaeton,2020,208,NEA.mp3
+Romanticos de Lunes,Feid,Reggaeton,2023,230,Romanticos de Lunes.mp3
+Ay Hombe,Jorge Celedon,Vallenato,2001,250,Ay Hombe.mp3
+Cuatro Rosas,Jorge Celedon,Vallenato,2004,268,Cuatro Rosas.mp3
+Esta Vida,Jorge Celedon,Vallenato,2006,244,Esta Vida.mp3
+No Me Toquen Ese Vals,Julio Jaramillo,Bolero,1958,190,No Me Toquen Ese Vals.mp3
+Odiame,Julio Jaramillo,Bolero,1957,210,Odiame.mp3
+Reminiscencias,Julio Jaramillo,Bolero,1960,208,Reminiscencias.mp3
+Purpose,Justin Bieber,Pop,2015,257,Purpose.mp3
+Sorry,Justin Bieber,Pop,2015,200,Sorry.mp3
+What Do You Mean,Justin Bieber,Pop,2015,205,What Do You Mean.mp3
