@@ -26,6 +26,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -287,14 +288,11 @@ public class UsuarioService {
         Usuario usuario = usuarioRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        // 1. Actualizar Nombre
         if (updateDto.getNombre() != null && !updateDto.getNombre().trim().isEmpty()) {
             usuario.setNombre(updateDto.getNombre());
         }
 
-        // 2. Actualizar Contraseña (si se solicita)
         if (updateDto.getNewPassword() != null && !updateDto.getNewPassword().trim().isEmpty()) {
-            // Validar que envió la contraseña actual
             if (updateDto.getCurrentPassword() == null || !updateDto.getCurrentPassword().equals(usuario.getPassword())) {
                 throw new RuntimeException("La contraseña actual es incorrecta.");
             }
@@ -307,13 +305,38 @@ public class UsuarioService {
     public List<Usuario> searchUsers(String query) {
         String queryLower = query.toLowerCase();
         
-       return usuarioRepository.findAll().stream()
+        return usuarioRepository.findAll().stream()
             .filter(u -> u.getUsername().toLowerCase().contains(queryLower) || 
                          (u.getNombre() != null && u.getNombre().toLowerCase().contains(queryLower)))
             .collect(Collectors.toList());
     }
+
     public Usuario getUserByUsername(String username) {
         return usuarioRepository.findByUsername(username)
             .orElseThrow(() -> new RuntimeException("Usuario no encontrado: " + username));
+    }
+
+    @Transactional
+    public Set<Usuario> getFollowedUsers(String username) {
+        Usuario usuario = usuarioRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        return usuario.getSeguidos();
+    }
+
+    @Transactional
+    public Set<Usuario> unfollowUser(String followerUsername, String followedUsername) {
+        Usuario seguidor = usuarioRepository.findByUsername(followerUsername)
+            .orElseThrow(() -> new RuntimeException("Usuario seguidor no encontrado"));
+        Usuario seguido = usuarioRepository.findByUsername(followedUsername)
+            .orElseThrow(() -> new RuntimeException("Usuario seguido no encontrado"));
+
+        boolean removed = seguidor.getSeguidos().remove(seguido);
+        
+        if (removed) {
+            usuarioRepository.save(seguidor);
+            grafoSocialService.eliminarConexion(seguidor, seguido);
+        }
+
+        return seguidor.getSeguidos();
     }
 }

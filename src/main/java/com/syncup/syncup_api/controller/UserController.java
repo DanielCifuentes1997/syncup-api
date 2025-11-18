@@ -126,6 +126,35 @@ public class UserController {
         return ResponseEntity.ok(favoritasDto);
     }
 
+    @GetMapping("/me/followed")
+    public ResponseEntity<List<UserDto>> getFollowedUsers(
+            @RequestHeader("Authorization") String token) {
+        
+        String username = usuarioService.getUsernameFromToken(token);
+        Set<Usuario> seguidos = usuarioService.getFollowedUsers(username);
+        
+        List<UserDto> seguidosDto = seguidos.stream()
+            .map(UserDto::new)
+            .collect(Collectors.toList());
+            
+        return ResponseEntity.ok(seguidosDto);
+    }
+
+    @DeleteMapping("/follow/{usernameToUnfollow}")
+    public ResponseEntity<List<UserDto>> unfollowUser(
+            @RequestHeader("Authorization") String token,
+            @PathVariable String usernameToUnfollow) {
+        
+        String followerUsername = usuarioService.getUsernameFromToken(token);
+        Set<Usuario> seguidos = usuarioService.unfollowUser(followerUsername, usernameToUnfollow);
+        
+        List<UserDto> seguidosDto = seguidos.stream()
+            .map(UserDto::new)
+            .collect(Collectors.toList());
+            
+        return ResponseEntity.ok(seguidosDto);
+    }
+
     @GetMapping("/me/favorites/export")
     public void exportFavorites(
             @RequestHeader("Authorization") String token,
@@ -178,6 +207,7 @@ public class UserController {
         
         return ResponseEntity.ok(dtos);
     }
+
     @GetMapping("/profile/{username}")
     public ResponseEntity<UserDto> getPublicProfile(@PathVariable String username) {
         Usuario usuario = usuarioService.getUserByUsername(username);

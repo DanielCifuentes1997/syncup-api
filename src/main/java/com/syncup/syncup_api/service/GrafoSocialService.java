@@ -60,4 +60,8 @@ public class GrafoSocialService {
     public void eliminarUsuario(Usuario usuario) {
         grafo.eliminarUsuario(usuario);
     }
+
+    public void eliminarConexion(Usuario usuario1, Usuario usuario2) {
+        grafo.eliminarConexion(usuario1, usuario2);
+    }
 }
