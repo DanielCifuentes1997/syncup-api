@@ -7,6 +7,7 @@ import com.syncup.syncup_api.domain.Cancion;
 import com.syncup.syncup_api.domain.Usuario;
 import com.syncup.syncup_api.dto.OnboardingRequest;
 import com.syncup.syncup_api.dto.UserRegistrationRequest;
+import com.syncup.syncup_api.dto.UserUpdateDto;
 import com.syncup.syncup_api.repository.CancionRepository;
 import com.syncup.syncup_api.repository.UsuarioRepository;
 import com.syncup.syncup_api.dto.LoginRequest;
@@ -26,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.crypto.SecretKey;
 
@@ -278,5 +280,40 @@ public class UsuarioService {
         usuarioAEliminar.setSeguidos(null);
         
         usuarioRepository.delete(usuarioAEliminar);
+    }
+
+    @Transactional
+    public Usuario updateUser(String username, UserUpdateDto updateDto) {
+        Usuario usuario = usuarioRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        // 1. Actualizar Nombre
+        if (updateDto.getNombre() != null && !updateDto.getNombre().trim().isEmpty()) {
+            usuario.setNombre(updateDto.getNombre());
+        }
+
+        // 2. Actualizar Contraseña (si se solicita)
+        if (updateDto.getNewPassword() != null && !updateDto.getNewPassword().trim().isEmpty()) {
+            // Validar que envió la contraseña actual
+            if (updateDto.getCurrentPassword() == null || !updateDto.getCurrentPassword().equals(usuario.getPassword())) {
+                throw new RuntimeException("La contraseña actual es incorrecta.");
+            }
+            usuario.setPassword(updateDto.getNewPassword());
+        }
+
+        return usuarioRepository.save(usuario);
+    }
+    
+    public List<Usuario> searchUsers(String query) {
+        String queryLower = query.toLowerCase();
+        
+       return usuarioRepository.findAll().stream()
+            .filter(u -> u.getUsername().toLowerCase().contains(queryLower) || 
+                         (u.getNombre() != null && u.getNombre().toLowerCase().contains(queryLower)))
+            .collect(Collectors.toList());
+    }
+    public Usuario getUserByUsername(String username) {
+        return usuarioRepository.findByUsername(username)
+            .orElseThrow(() -> new RuntimeException("Usuario no encontrado: " + username));
     }
 }
